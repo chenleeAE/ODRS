@@ -6,3 +6,4 @@
         Saint Michael College of Caraga &copy; <script>document.write(new Date().getFullYear())</script>
     </div>
 </div>
+
