@@ -3,7 +3,7 @@
 
 <?php
 	session_start();
-	$title = 'Statistics';
+	$title = 'Report';
 	include ('../includes/header.php');
 	if(!isset($_SESSION['id'])){ header("Location: ../index.php"); }
 ?>
@@ -17,10 +17,10 @@
 
             <div class="row wrapper border-bottom white-bg page-heading">
                 <div class="col-lg-10">
-                    <h2>Statistics</h2>
+                    <h2>Report</h2>
                     <ol class="breadcrumb">
                         <li><a href="home.php">Home</a></li>
-                        <li class="active"><strong>Statistics</strong></li>
+                        <li class="active"><strong>Report</strong></li>
                     </ol>
                 </div>
                 <div class="col-lg-2"></div>
@@ -31,7 +31,7 @@
                     <div class="col-lg-12">
                         <div class="ibox float-e-margins">
                             <div class="ibox-title">
-                                <h5>Pie Chart of Applications</h5>
+                                <h5>List of Records</h5>
                                 <div class="ibox-tools">
                                     <a class="collapse-link">
                                         <i class="fa fa-chevron-up"></i>
@@ -67,6 +67,11 @@
                                         </div>
 
                                         <div class="col-md-2">
+                                            <label>Search Name</label>
+                                            <input type="text" id="search_name" name="search_name" class="form-control" placeholder="Search Name">
+                                        </div>
+
+                                        <div class="col-md-2">
                                             <div class="btn-group mt-4" role="group" aria-label="Report Actions">
                                                 <button id="printButton" class="btn btn-info" type="button">Print Report</button>
                                             </div>
@@ -76,7 +81,7 @@
 
                                 <div id="printableArea">
                                     <div class="header">
-                                        <img src="../public/img/logo.png" alt="College Logo" class="logo">
+                                        <img src="../public/img/logo.png" alt="Municipal logo" class="logo">
                                         <div class="header-content">
                                             <h2>Republic of the Philippines</h2>
                                             <p>Province of Agusan del Norte</p>
@@ -85,11 +90,21 @@
                                             <br>
                                         </div>
                                     </div>
-                                    <div class="flot-chart">
-                                        <div class="flot-chart-pie-content" id="flot-pie-chart"></div>
+                                        
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered table-hover dataTables-example report-table" >
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Name</th>
+                                                    <th>Document Type</th>
+                                                    <th>Date Requested</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="data"></tbody>
+                                        </table>
                                     </div>
-
-                                    <h4>No. of Release Documents: <span id="document-count">0</span></h4>
+                                    
                                 </div>
                                 
                             </div>
@@ -97,6 +112,42 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Report Modal -->
+            <div id="report-modal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel"></h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        </div>
+                        <div class="modal-body" id="report-form">
+                            <button class="btnPrint" style="background-color: #007BFF; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer;"
+                                onmouseover="this.style.backgroundColor='#0056b3'" 
+                                onmouseout="this.style.backgroundColor='#007BFF'" onclick="window.print()">PRINT
+                            </button>
+                            
+                            <div class="header">
+                                <img src="../public/img/logo.png" alt="College Logo" class="logo">
+                                <div class="header-content">
+                                    <h2>Republic of the Philippines</h2>
+                                    <p>Province of Agusan del Norte</p>
+                                    <p>Municipality of Nasipit</p>
+                                    <h5>OFFICE OF THE MUNICIPAL CIVIL REGISTRAR</h5>
+                                    <br>
+                                </div>
+                            </div>
+
+                            <table id="report-table">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div> 
+            <!-- Report Modal -->
 
             <?php include('../includes/footer.php') ?>
         </div>
@@ -108,67 +159,85 @@
 <script>
     $(document).ready(function(){
         $('#printButton').click(function() {
-            var printContent = document.getElementById('printableArea');
-            var canvas = $("#flot-pie-chart")[0].getElementsByTagName("canvas")[0];
-            if (canvas) {
-                var chartImage = canvas.toDataURL();
-            }
+            event.preventDefault(); // Prevent form submission
 
-            var screenWidth = window.innerWidth;
-            var screenHeight = window.innerHeight;
-
-            // Define the window's width and height
-            var windowWidth = 800;
-            var windowHeight = 600;
-
-            var left = (screenWidth - windowWidth) / 2;
-            var top = (screenHeight - windowHeight) / 2;
-
-            var newWindow = window.open('', '', `height=${windowHeight},width=${windowWidth},top=${top},left=${left}`);
-
-            newWindow.document.write('<html><head><title>Print</title>');
-            newWindow.document.write('<style>body { font-family: Arial, sans-serif; }</style>'); // Optional style
-            newWindow.document.write(`<style>
-                .header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    text-align: center;
-                    margin-bottom: 10px; /* Reduced space */
-                }
-                .logo {
-                    width: 80px; /* Adjust size as needed */
-                    height: 80px;
-                    margin-top: -50px;
-                    margin-left: -10px; /* Less space */
-                }
-                .header-content {
-                    max-width: 400px; /* Keeps text compact */
-                    margin: 0;
-                    padding: 0;
-                }
-                h2 {
-                    font-size: 16px; /* Smaller heading */
-                    margin: 3px 0;
-                }
-                h3 {
-                    margin: 6px 0;
-                }
-                p {
-                    font-size: 12px; /* Smaller text */
-                    margin: 1px 0;
-                }
-            </style>`);
-            newWindow.document.write('</head><body>');
-            newWindow.document.write(printContent.innerHTML); // Write the content of the printable div
-            newWindow.document.write('<center><img src="' + chartImage + '" /></center>'); // Insert the image of the chart
-            newWindow.document.write('</body></html>');
+            var document_type = $('select[name="document_type"]').val();
+            var search_name = $('#search_name').val();
             
-            newWindow.document.close();
-            setTimeout(function() {
-                newWindow.print();
-            }, 1000);
+            var reportData = getReportData();
+            fetchReportData(document_type, reportData, search_name);  
+
+            setTimeout(() => {
+                // $('#report-modal').modal('toggle');
+                let css = `
+                    @media print {
+                        @page {
+                            size: A4 landscape;  /* Ensure page size is A4 in landscape orientation */
+                        }
+                    }
+                `;
+                
+                var toPrint = document.getElementById('report-form');
+                var newTab = window.open('', '_blank');
+                newTab.document.write('<html><head><title>Released Report</title>');
+                newTab.document.write('<style>' + css + '</style>');
+
+                // Link to an external CSS file
+                newTab.document.write('<link rel="stylesheet" type="text/css" href="../public/css/report.css?v=' + new Date().getTime() + '">');
+
+                newTab.document.write('</head><body>');
+                newTab.document.write(toPrint.innerHTML);
+                newTab.document.write('</body></html>');
+
+                newTab.document.close(); // necessary for IE >= 10
+                newTab.focus(); // necessary for IE >= 10
+                // newTab.print();
+            }, 500); // Delay of 500 milliseconds (0.5 seconds)
+
         });
+
+        function fetchReportData(document_type, reportData, search_name) {
+                const url = '../modules/report/get-report.php';
+                var template = '';
+                var table = $('#report-table thead');
+                table.empty();
+
+                var tableBody = $('#report-table tbody');
+                tableBody.empty();
+                template += `
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Document Type</th>
+                            <th>Date Requested</th>
+                        </tr>
+                    `;
+
+                $.ajaxSetup({async: false});
+                $.get(url, { document_type, reportData: JSON.stringify(reportData), search_name }, (response) => {
+                    console.log(response);
+                    const rows = JSON.parse(response);
+                    if (rows.length === 0) { 
+                        template += `<tr>`;
+                        template += `<td colspan=5 class="text-center">No data available!</td>`;
+                        template += `</tr>`;
+                    }
+                    else {
+                        rows.forEach((row, index) => {
+                            const { requested_by, document_type, date_requested, status } = row;
+
+                            template += `<tr>`;
+                            template += `<td>${index + 1}</td>`;
+                            template += `<td>${requested_by}</td>`;
+                            template += `<td>${document_type}</td>`;
+                            template += `<td>${moment(date_requested).format('MMMM DD, YYYY')}</td>`;
+                            template += `</tr>`;
+                        });
+                    }
+
+                    table.append(template);
+                });
+            }
         
         $('#frequency').on('change', function() {
             var selectedFrequency = $(this).val();
@@ -215,7 +284,6 @@
                 var currentDate = new Date().toISOString().split('T')[0];  // Get current date in YYYY-MM-DD format
                 dynamicContent = '<label for="day">Day <span class="text-danger">*</span></label>';
                 dynamicContent += `<input type="date" id="day" name="day" class="form-control" required>`;
-                // dynamicContent += `<input type="date" id="day" name="day" class="form-control" value='${currentDate}' required>`;
             }
 
             // Insert the dynamic content into the "dynamicFields" div
@@ -227,14 +295,23 @@
 
         $('select[name="document_type"]').on('change', function() {
             var document_type = $(this).val();
+            var search_name = $('#search_name').val();
             var reportData = getReportData();
-            getData(document_type, reportData);
+            getData(document_type, reportData, search_name);
+        });
+        
+        $('#search_name').on('input', function() {
+            var document_type = $('select[name="document_type"]').val();
+            var search_name = $('#search_name').val();
+            var reportData = getReportData();
+            getData(document_type, reportData, search_name);
         });
         
         $('#dynamicFields').on('change', 'select, input', function() {
             var document_type = $('select[name="document_type"]').val();
+            var search_name = $('#search_name').val();
             var reportData = getReportData();
-            getData(document_type, reportData);  
+            getData(document_type, reportData, search_name);
         });
 
         // $('select[name="document_type"]').trigger('change');
@@ -269,48 +346,29 @@
             return reportData;
         }
 
-        function getData(document_type, reportData) {
-            
-            $.get('../modules/statistics/get.php', { document_type, reportData: JSON.stringify(reportData) }, (response) => {
+        function getData(document_type, reportData, search_name) {
+            const url = '../modules/report/get-report.php';
+
+            var table = $('.report-table').DataTable();
+            table.clear().draw();
+            $.get(url, { document_type, reportData: JSON.stringify(reportData), search_name }, (response) => {
                 console.log(response);
                 const rows = JSON.parse(response);
-                console.log(rows);
-                
-                if (rows.message) {
-                    alert('No data found!');
-                    return;
+                if (rows.message) { 
+                    // alert('No data available');
                 }
-
-                // Function to sum all the 'data' values
-                const totalData = rows.map(item => item.data).reduce((sum, currentData) => sum + currentData, 0);
-                const spanElement = document.getElementById("document-count");
-                spanElement.textContent = totalData;
-
-                var data = rows;
-
-                // Now plot the data using Flot
-                var plotObj = $.plot($("#flot-pie-chart"), data, {
-                    series: {
-                        pie: {
-                            show: true
-                        }
-                    },
-                    grid: {
-                        hoverable: true
-                    },
-                    tooltip: true,
-                    tooltipOpts: {
-                        content: "%p.0%, %s", // show percentages, rounding to 2 decimal places
-                        shifts: {
-                            x: 20,
-                            y: 0
-                        },
-                        defaultTheme: false
-                    }
-                });
-
+                else {
+                    rows.forEach((row, index) => {
+                        table.row.add($(`<tr>
+                                            <td>${index + 1}</td>
+                                            <td>${row.requested_by}</td>
+                                            <td>${row.document_type}</td>
+                                            <td>${moment(row.date_requested).format('MMMM D, YYYY')}</td>
+                                        </tr>`)).draw();
+                    });
+                }
             });
-            
+
         }
 	
     });

@@ -55,3 +55,6 @@
 <li class="<?php if($title == 'Statistics') echo 'active' ?>">
     <a href="statistics.php"><i class="fa fa-pie-chart"></i> <span class="nav-label">Statistics</span></a>
 </li>
+<li class="<?php if($title == 'Report') echo 'active' ?>">
+    <a href="report.php"><i class="fa fa-folder"></i> <span class="nav-label">Report</span></a>
+</li>

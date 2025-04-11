@@ -4,7 +4,7 @@
 $server_name = "localhost";
 $db_username = "root";
 $db_password = "";
-$db_name = "odrs";
+$db_name = "ambush";
 
 $connection = mysqli_connect($server_name,$db_username,$db_password,$db_name);
 
